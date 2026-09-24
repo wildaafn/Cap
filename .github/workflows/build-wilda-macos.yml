@@ -62,6 +62,7 @@ jobs:
           APP="target/aarch64-apple-darwin/release/bundle/macos/Cap Wilda.app"
           test -d "$APP"
           test "$(defaults read "$PWD/$APP/Contents/Info" CFBundleIdentifier)" = "com.wildaafn.cap"
+          codesign --force --deep --sign - "$APP"
           codesign --verify --deep --strict "$APP"
           mkdir -p dist
           ditto -c -k --keepParent "$APP" dist/cap-wilda-macos-arm64.zip
