@@ -1,0 +1,22 @@
+{
+	"$schema": "https://schema.tauri.app/config/2",
+	"productName": "Cap Wilda",
+	"mainBinaryName": "Cap Wilda",
+	"identifier": "com.wildaafn.cap",
+	"build": {
+		"beforeBundleCommand": "node scripts/prodBeforeBundle.js"
+	},
+	"plugins": {
+		"updater": {
+			"active": false,
+			"endpoints": [],
+			"dialog": false,
+			"pubkey": ""
+		}
+	},
+	"bundle": {
+		"macOS": {
+			"entitlements": "Entitlements.plist"
+		}
+	}
+}

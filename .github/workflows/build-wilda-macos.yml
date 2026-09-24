@@ -1,0 +1,75 @@
+name: Build Cap Wilda for macOS
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-14
+    timeout-minutes: 180
+    env:
+      RUST_TARGET_TRIPLE: aarch64-apple-darwin
+      MACOSX_DEPLOYMENT_TARGET: "12.3"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@1.88.0
+        with:
+          targets: aarch64-apple-darwin
+
+      - name: Cache Rust dependencies
+        uses: ./.github/actions/setup-rust-cache
+        with:
+          target: aarch64-apple-darwin
+          prefix-key: v1-wilda-macos-release
+          save-cache: true
+          cache-on-failure: true
+          workspaces: |
+            . -> target
+            apps/desktop-gpui -> target
+
+      - name: Set up JavaScript dependencies
+        uses: ./.github/actions/setup-js
+
+      - name: Create self-hosted build environment
+        shell: bash
+        run: |
+          cat > .env <<'ENV'
+          NODE_ENV=production
+          VITE_ENVIRONMENT=production
+          VITE_SERVER_URL=http://localhost:3000
+          NEXT_PUBLIC_WEB_URL=http://localhost:3000
+          RUST_TARGET_TRIPLE=aarch64-apple-darwin
+          ENV
+
+      - name: Prepare native dependencies
+        run: bun run cap-setup
+
+      - name: Build Cap Wilda
+        working-directory: apps/desktop
+        env:
+          CI: false
+        run: node ../../scripts/build-macos-packages.mjs aarch64-apple-darwin --config src-tauri/tauri.wilda.conf.json --verbose
+
+      - name: Verify application bundle
+        shell: bash
+        run: |
+          APP="target/aarch64-apple-darwin/release/bundle/macos/Cap Wilda.app"
+          test -d "$APP"
+          test "$(defaults read "$PWD/$APP/Contents/Info" CFBundleIdentifier)" = "com.wildaafn.cap"
+          codesign --verify --deep --strict "$APP"
+          mkdir -p dist
+          ditto -c -k --keepParent "$APP" dist/cap-wilda-macos-arm64.zip
+
+      - name: Upload macOS application
+        uses: actions/upload-artifact@v4
+        with:
+          name: cap-wilda-macos-arm64
+          path: dist/cap-wilda-macos-arm64.zip
+          if-no-files-found: error
+          retention-days: 14

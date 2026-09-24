@@ -34,6 +34,7 @@
 		"format": "bun run biome check --write",
 		"lint": "bun run biome lint",
 		"tauri:build": "dotenv -e .env -- bun run --cwd apps/desktop build:tauri --config src-tauri/tauri.prod.conf.json --verbose",
+		"tauri:build:wilda": "dotenv -e .env -- bun run --cwd apps/desktop build:tauri --config src-tauri/tauri.wilda.conf.json --verbose",
 		"typecheck": "bun run --cwd apps/web next typegen && bun run tsc -b",
 		"test": "turbo run test",
 		"test:web": "bun run --filter=@cap/web test",
